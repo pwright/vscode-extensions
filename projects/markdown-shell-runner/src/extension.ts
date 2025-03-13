@@ -397,7 +397,7 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Get the enabled languages from configuration
     const config = vscode.workspace.getConfiguration('markdownShellRunner');
-    const enabledLanguages: string[] = config.get('enabledLanguages') || ['shell', 'bash', 'sh', 'zsh'];
+    const enabledLanguages: string[] = config.get('enabledLanguages') || ['shell', 'bash', 'sh', 'zsh', 'python', 'py'];
     
     // Register the CodeLens provider
     const codeLensProvider = new ShellCodeLensProvider();
