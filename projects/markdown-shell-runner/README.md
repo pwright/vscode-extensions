@@ -6,7 +6,8 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
 
 - Run shell scripts from markdown code blocks with a simple run button or right-click
 - Supports `shell`, `bash`, `sh`, and `zsh` code blocks
-- View command output in a dedicated output channel
+- Execute commands in dedicated terminals or view output in the output channel
+- Each markdown file gets its own terminal for running commands
 - Configurable supported languages
 - Commands are executed from the directory of the markdown file
 
@@ -20,7 +21,7 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
    ![Run Button](images/run-button.png)
 
 3. Click the run button to execute the code block
-4. View the output in the "Markdown Shell Runner" output channel
+4. The command will run in a dedicated terminal named "Markdown Shell Runner (index)"
 
 ### Using the Context Menu
 
@@ -35,7 +36,14 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
    ````
 
 3. Right-click and select "Run Shell Code Block" from the context menu
-4. View the output in the "Markdown Shell Runner" output channel
+4. The command will run in a dedicated terminal
+
+### Terminal Management
+
+- Each markdown file gets its own dedicated terminal
+- Terminals are named "Markdown Shell Runner (index)" where index starts from 0
+- When you run commands from the same file, they will reuse the same terminal
+- When you run commands from a different file, a new terminal will be created with an incremented index
 
 ## Extension Settings
 
@@ -43,6 +51,7 @@ This extension contributes the following settings:
 
 * `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh"]`)
 * `markdownShellRunner.enableCodeLens`: Enable or disable the run button above shell code blocks (default: `true`)
+* `markdownShellRunner.useTerminal`: Run shell commands in a terminal instead of the output channel (default: `true`)
 
 ## Requirements
 
@@ -73,6 +82,13 @@ See the [test README](src/test/README.md) for more information about the tests.
 - Long-running commands may timeout
 
 ## Release Notes
+
+### 0.3.0
+
+- Added feature to run shell commands in dedicated terminals
+- Each markdown file now gets its own terminal named "Markdown Shell Runner (index)"
+- Added configuration option to choose between terminal and output channel
+- Improved terminal management with automatic indexing
 
 ### 0.2.2
 

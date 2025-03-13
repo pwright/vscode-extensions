@@ -3,6 +3,34 @@ import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 
+// Map to track terminals for each file
+const fileTerminals = new Map<string, vscode.Terminal>();
+let terminalIndex = 0;
+
+// Function to get or create a terminal for a specific file
+function getOrCreateTerminal(documentUri: vscode.Uri): vscode.Terminal {
+    const filePath = documentUri.fsPath;
+    
+    // Check if a terminal already exists for this file
+    if (fileTerminals.has(filePath)) {
+        return fileTerminals.get(filePath)!;
+    }
+    
+    // Create a new terminal for this file
+    const terminal = vscode.window.createTerminal({
+        name: `Markdown Shell Runner (${terminalIndex})`,
+        cwd: path.dirname(filePath)
+    });
+    
+    // Store the terminal in the map
+    fileTerminals.set(filePath, terminal);
+    
+    // Increment the terminal index for the next terminal
+    terminalIndex++;
+    
+    return terminal;
+}
+
 // Function to extract code blocks from markdown
 export function extractCodeBlock(document: vscode.TextDocument, position: vscode.Position): { code: string, language: string, range: vscode.Range } | undefined {
     const text = document.getText();
@@ -192,30 +220,45 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
         return;
     }
     
-    // Create and show output channel
-    const outputChannel = vscode.window.createOutputChannel('Markdown Shell Runner');
-    outputChannel.show();
-    outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
-    outputChannel.appendLine('----------------------------------------');
-    outputChannel.appendLine(codeBlock.code);
-    outputChannel.appendLine('----------------------------------------');
+    // Get the configuration
+    const config = vscode.workspace.getConfiguration('markdownShellRunner');
+    const useTerminal = config.get<boolean>('useTerminal', true);
     
-    try {
-        // Run the command from the directory of the markdown file
-        const result = await runShellCommand(codeBlock.code, document.uri);
+    if (useTerminal) {
+        // Get or create a terminal for this file
+        const terminal = getOrCreateTerminal(document.uri);
         
-        // Display the result
-        outputChannel.appendLine('Output:');
+        // Show the terminal
+        terminal.show();
+        
+        // Send the command to the terminal
+        terminal.sendText(codeBlock.code);
+    } else {
+        // Create and show output channel
+        const outputChannel = vscode.window.createOutputChannel('Markdown Shell Runner');
+        outputChannel.show();
+        outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
         outputChannel.appendLine('----------------------------------------');
-        outputChannel.appendLine(result);
+        outputChannel.appendLine(codeBlock.code);
         outputChannel.appendLine('----------------------------------------');
-        outputChannel.appendLine('Command executed successfully');
-        outputChannel.appendLine(`Working directory: ${path.dirname(document.uri.fsPath)}`);
-    } catch (error) {
-        if (error instanceof Error) {
-            outputChannel.appendLine(`Error: ${error.message}`);
-        } else {
-            outputChannel.appendLine(`Unknown error occurred`);
+        
+        try {
+            // Run the command from the directory of the markdown file
+            const result = await runShellCommand(codeBlock.code, document.uri);
+            
+            // Display the result
+            outputChannel.appendLine('Output:');
+            outputChannel.appendLine('----------------------------------------');
+            outputChannel.appendLine(result);
+            outputChannel.appendLine('----------------------------------------');
+            outputChannel.appendLine('Command executed successfully');
+            outputChannel.appendLine(`Working directory: ${path.dirname(document.uri.fsPath)}`);
+        } catch (error) {
+            if (error instanceof Error) {
+                outputChannel.appendLine(`Error: ${error.message}`);
+            } else {
+                outputChannel.appendLine(`Unknown error occurred`);
+            }
         }
     }
 }
@@ -234,6 +277,19 @@ export function activate(context: vscode.ExtensionContext) {
             { language: 'markdown' },
             codeLensProvider
         )
+    );
+    
+    // Listen for terminal close events to remove them from the map
+    context.subscriptions.push(
+        vscode.window.onDidCloseTerminal(terminal => {
+            // Find and remove the closed terminal from the map
+            for (const [filePath, t] of fileTerminals.entries()) {
+                if (t === terminal) {
+                    fileTerminals.delete(filePath);
+                    break;
+                }
+            }
+        })
     );
     
     // Register the command to run code blocks at a specific position

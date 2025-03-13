@@ -2,7 +2,7 @@
   "name": "markdown-shell-runner",
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "example",
   "engines": {
     "vscode": "^1.85.0"
@@ -55,6 +55,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable or disable the run button above shell code blocks"
+        },
+        "markdownShellRunner.useTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run shell commands in a terminal instead of the output channel"
         }
       }
     }
