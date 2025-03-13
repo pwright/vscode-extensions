@@ -1,0 +1,61 @@
+# Markdown Shell Runner Sample
+
+This is a sample markdown file to test the Markdown Shell Runner extension.
+
+## Shell Script Example
+
+Place your cursor inside the code block below and look for the "▶ Run" button above the code block, or right-click to select "Run Shell Code Block":
+
+```bash
+echo "Hello, World!"
+echo "Current directory:"
+pwd
+echo "Files in current directory:"
+ls -la
+```
+
+## Another Example with Shell
+
+```shell
+# This is a shell script
+echo "Current date and time:"
+date
+echo "System information:"
+uname -a
+```
+
+## Example with sh
+
+```sh
+# This is an sh script
+echo "Environment variables:"
+env | grep PATH
+```
+
+## Example with zsh (if available)
+
+```zsh
+# This is a zsh script (will only work if zsh is installed)
+echo "ZSH version:"
+zsh --version 2>/dev/null || echo "ZSH not installed"
+```
+
+## Non-executable Code Block
+
+This code block should not be executable by the extension (no run button should appear):
+
+```javascript
+console.log("This is JavaScript, not a shell script");
+```
+
+## Using the Run Button
+
+The run button appears above shell code blocks and allows you to execute the code with a single click. This is a convenient way to run shell scripts without having to use the context menu.
+
+## Disabling the Run Button
+
+If you prefer not to see the run button, you can disable it in the extension settings:
+
+1. Open VS Code settings (File > Preferences > Settings)
+2. Search for "Markdown Shell Runner"
+3. Uncheck the "Enable Code Lens" option

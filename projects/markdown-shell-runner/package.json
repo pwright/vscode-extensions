@@ -1,0 +1,93 @@
+{
+  "name": "markdown-shell-runner",
+  "displayName": "Markdown Shell Runner",
+  "description": "Run shell scripts directly from markdown code blocks",
+  "version": "0.1.0",
+  "publisher": "example",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdown-shell-runner.runCodeBlock",
+        "title": "Run Shell Code Block"
+      },
+      {
+        "command": "markdown-shell-runner.runCodeBlockAtPosition",
+        "title": "Run Shell Code Block at Position"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorLangId == markdown && editorTextFocus",
+          "command": "markdown-shell-runner.runCodeBlock",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Markdown Shell Runner",
+      "properties": {
+        "markdownShellRunner.enabledLanguages": {
+          "type": "array",
+          "default": [
+            "shell",
+            "bash",
+            "sh",
+            "zsh"
+          ],
+          "description": "Languages that can be executed from markdown code blocks"
+        },
+        "markdownShellRunner.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the run button above shell code blocks"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "mocha out/test/unit/**/*.js",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.x.x",
+    "@types/mocha": "^10.x.x",
+    "@types/node": "^20.x.x",
+    "@types/sinon": "^17.x.x",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.x.x",
+    "@vscode/vsce": "^2.x.x",
+    "chai": "^4.x.x",
+    "mocha": "^10.x.x",
+    "sinon": "^17.x.x",
+    "typescript": "^5.x.x"
+  },
+  "keywords": [
+    "markdown",
+    "shell",
+    "bash",
+    "runner",
+    "execute"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/markdown-shell-runner.git"
+  }
+}
