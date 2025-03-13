@@ -83,6 +83,12 @@ See the [test README](src/test/README.md) for more information about the tests.
 
 ## Release Notes
 
+### 0.3.2
+
+- Fixed issue where run button would appear for incomplete code blocks
+- Improved code block detection to only recognize complete blocks with content
+- Enhanced regex patterns to ensure proper parsing of shell code blocks
+
 ### 0.3.1
 
 - Fixed issue with exclamation marks in shell commands causing quote mismatching

@@ -40,8 +40,9 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
     const text = document.getText();
     const offset = document.offsetAt(position);
     
-    // Regular expression to match markdown code blocks
-    const codeBlockRegex = /```(shell|bash|sh|zsh)[\s\S]*?```/g;
+    // Regular expression to match complete markdown code blocks with content
+    // This ensures that empty code blocks or incomplete blocks are not matched
+    const codeBlockRegex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -50,12 +51,8 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
         
         if (startOffset <= offset && offset <= endOffset) {
             // Extract the language and code content
-            const fullMatch = match[0];
             const language = match[1];
-            
-            // Extract the code content (remove the opening and closing ```)
-            const codeLines = fullMatch.split('\n');
-            const code = codeLines.slice(1, codeLines.length - 1).join('\n');
+            const code = match[2];
             
             // Calculate the range of the code block
             const startPos = document.positionAt(startOffset);
@@ -74,8 +71,8 @@ export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: s
     const text = document.getText();
     const codeBlocks: { code: string, language: string, range: vscode.Range }[] = [];
     
-    // Regular expression to match markdown code blocks
-    const codeBlockRegex = /```(shell|bash|sh|zsh)[\s\S]*?```/g;
+    // Regular expression to match complete markdown code blocks with content
+    const codeBlockRegex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -83,12 +80,8 @@ export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: s
         const endOffset = match.index + match[0].length;
         
         // Extract the language and code content
-        const fullMatch = match[0];
         const language = match[1];
-        
-        // Extract the code content (remove the opening and closing ```)
-        const codeLines = fullMatch.split('\n');
-        const code = codeLines.slice(1, codeLines.length - 1).join('\n');
+        const code = match[2];
         
         // Calculate the range of the code block
         const startPos = document.positionAt(startOffset);
@@ -158,7 +151,8 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
     constructor() {
-        this.regex = /```(shell|bash|sh|zsh)/g;
+        // Updated regex to match only complete code blocks with content
+        this.regex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
         
         // Watch for document changes to refresh code lenses
         vscode.workspace.onDidChangeTextDocument(e => {
@@ -193,17 +187,21 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
         let matches;
         
         while ((matches = this.regex.exec(text)) !== null) {
+            // Get the line of the opening code fence
             const line = document.lineAt(document.positionAt(matches.index).line);
             const position = new vscode.Position(line.lineNumber, 0);
             
             const range = new vscode.Range(position, position);
             
-            this.codeLenses.push(new vscode.CodeLens(range, {
-                title: "▶ Run",
-                tooltip: "Run this shell code block",
-                command: "markdown-shell-runner.runCodeBlockAtPosition",
-                arguments: [document.uri, position]
-            }));
+            // Only add CodeLens if there's actual content in the code block
+            if (matches[2] && matches[2].trim().length > 0) {
+                this.codeLenses.push(new vscode.CodeLens(range, {
+                    title: "▶ Run",
+                    tooltip: "Run this shell code block",
+                    command: "markdown-shell-runner.runCodeBlockAtPosition",
+                    arguments: [document.uri, position]
+                }));
+            }
         }
         
         return this.codeLenses;
