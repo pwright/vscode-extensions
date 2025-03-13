@@ -1,0 +1,47 @@
+# Change Log
+
+All notable changes to the "Markdown Shell Runner" extension will be documented in this file.
+
+## [0.3.2] - 2024-07-01
+
+- Fixed issue where run button would appear for incomplete code blocks
+- Improved code block detection to only recognize complete blocks with content
+- Enhanced regex patterns to ensure proper parsing of shell code blocks
+
+## [0.3.1] - 2024-06-30
+
+- Fixed issue with exclamation marks in shell commands causing quote mismatching
+- Improved terminal handling to properly escape special characters
+- Added support for disabling history expansion in bash shells
+
+## [0.3.0] - 2024-06-29
+
+- Added feature to run shell commands in dedicated terminals
+- Each markdown file now gets its own terminal named "Markdown Shell Runner (index)"
+- Added configuration option to choose between terminal and output channel
+- Improved terminal management with automatic indexing
+
+## [0.2.2] - 2024-06-28
+
+- Updated unit tests to cover the new working directory functionality
+- Improved test coverage and reliability
+
+## [0.2.1] - 2024-06-27
+
+- Added LICENSE file
+- Improved packaging process to skip prompts
+- Updated configuration for smoother development workflow
+
+## [0.2.0] - 2024-06-26
+
+- Added feature to execute commands from the directory of the markdown file
+- Improved output display to show the working directory
+- Updated documentation with examples of the new feature
+
+## [0.1.0] - 2024-06-25
+
+- Initial release
+- Support for running shell code blocks
+- Configurable language support
+- Run button above shell code blocks
+- Commands are executed from the directory of the markdown file 

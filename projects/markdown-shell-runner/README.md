@@ -49,9 +49,9 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
 
 This extension contributes the following settings:
 
-* `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh"]`)
-* `markdownShellRunner.enableCodeLens`: Enable or disable the run button above shell code blocks (default: `true`)
-* `markdownShellRunner.useTerminal`: Run shell commands in a terminal instead of the output channel (default: `true`)
+- `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh"]`)
+- `markdownShellRunner.enableCodeLens`: Enable or disable the run button above shell code blocks (default: `true`)
+- `markdownShellRunner.useTerminal`: Run shell commands in a terminal instead of the output channel (default: `true`)
 
 ## Requirements
 
@@ -83,49 +83,7 @@ See the [test README](src/test/README.md) for more information about the tests.
 
 ## Release Notes
 
-### 0.3.2
-
-- Fixed issue where run button would appear for incomplete code blocks
-- Improved code block detection to only recognize complete blocks with content
-- Enhanced regex patterns to ensure proper parsing of shell code blocks
-
-### 0.3.1
-
-- Fixed issue with exclamation marks in shell commands causing quote mismatching
-- Improved terminal handling to properly escape special characters
-- Added support for disabling history expansion in bash shells
-
-### 0.3.0
-
-- Added feature to run shell commands in dedicated terminals
-- Each markdown file now gets its own terminal named "Markdown Shell Runner (index)"
-- Added configuration option to choose between terminal and output channel
-- Improved terminal management with automatic indexing
-
-### 0.2.2
-
-- Updated unit tests to cover the new working directory functionality
-- Improved test coverage and reliability
-
-### 0.2.1
-
-- Added LICENSE file
-- Improved packaging process to skip prompts
-- Updated configuration for smoother development workflow
-
-### 0.2.0
-
-- Added feature to execute commands from the directory of the markdown file
-- Improved output display to show the working directory
-- Updated documentation with examples of the new feature
-
-### 0.1.0
-
-- Initial release
-- Support for running shell code blocks
-- Configurable language support
-- Run button above shell code blocks
-- Commands are executed from the directory of the markdown file
+For detailed release notes, see the [CHANGELOG.md](CHANGELOG.md) file.
 
 ## Security Considerations
 
