@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { describe, it } from 'mocha';
+import { suite, test, setup, teardown } from 'mocha';
 import * as sinon from 'sinon';
 import * as cp from 'child_process';
 import * as os from 'os';
@@ -19,19 +19,19 @@ const mockRunShellCommand = async (command: string, documentUri?: vscode.Uri): P
   return `Command: ${command}, Working Directory: ${cwd}`;
 };
 
-describe('Markdown Shell Runner', () => {
+suite('Markdown Shell Runner', () => {
   let sandbox: sinon.SinonSandbox;
   
-  beforeEach(() => {
+  setup(() => {
     sandbox = sinon.createSandbox();
   });
   
-  afterEach(() => {
+  teardown(() => {
     sandbox.restore();
   });
   
-  describe('extractCodeBlock', () => {
-    it('should extract bash code block', () => {
+  suite('extractCodeBlock', () => {
+    test('should extract bash code block', () => {
       const content = [
         '# Test Document',
         '',
@@ -51,7 +51,7 @@ describe('Markdown Shell Runner', () => {
       assert.strictEqual(result!.code, 'echo "Hello, World!"');
     });
     
-    it('should extract shell code block', () => {
+    test('should extract shell code block', () => {
       const content = [
         '# Test Document',
         '',
@@ -71,7 +71,7 @@ describe('Markdown Shell Runner', () => {
       assert.strictEqual(result!.code, 'ls -la');
     });
     
-    it('should return undefined for non-shell code blocks', () => {
+    test('should return undefined for non-shell code blocks', () => {
       const content = [
         '# Test Document',
         '',
@@ -89,7 +89,7 @@ describe('Markdown Shell Runner', () => {
       assert.strictEqual(result, undefined);
     });
     
-    it('should return undefined when cursor is outside code blocks', () => {
+    test('should return undefined when cursor is outside code blocks', () => {
       const content = [
         '# Test Document',
         '',
@@ -108,13 +108,13 @@ describe('Markdown Shell Runner', () => {
     });
   });
   
-  describe('runShellCommand', () => {
-    it('should use workspace root when no document URI is provided', async () => {
+  suite('runShellCommand', () => {
+    test('should use workspace root when no document URI is provided', async () => {
       const result = await mockRunShellCommand('echo "test"');
       assert.strictEqual(result, 'Command: echo "test", Working Directory: /test/workspace');
     });
     
-    it('should use document directory when document URI is provided', async () => {
+    test('should use document directory when document URI is provided', async () => {
       const documentUri = vscode.Uri.file('/test/documents/test.md');
       const result = await mockRunShellCommand('echo "test"', documentUri);
       assert.strictEqual(result, 'Command: echo "test", Working Directory: /test/documents');
