@@ -5,6 +5,8 @@ module.exports = defineConfig({
   files: 'out/test/**/*.test.js',
   version: 'stable',
   extensionDevelopmentPath: path.resolve(__dirname),
+  workspaceFolder: '/tmp/vst',
+  userDataDir: '/tmp/vst-data',
   mocha: {
     ui: 'tdd',
     timeout: 20000
