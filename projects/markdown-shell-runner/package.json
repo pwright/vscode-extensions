@@ -2,7 +2,7 @@
   "name": "markdown-shell-runner",
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "shepherd-dev",
   "engines": {
     "vscode": "^1.85.0"
@@ -62,6 +62,11 @@
           "type": "boolean",
           "default": true,
           "description": "Run shell commands in a terminal instead of the output channel"
+        },
+        "markdownShellRunner.usePythonWebView": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run Python code in a WebView panel instead of the output channel"
         }
       }
     }

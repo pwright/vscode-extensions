@@ -7,7 +7,7 @@ A Visual Studio Code extension that allows you to run shell scripts and Python c
 - Run shell scripts and Python code from markdown code blocks with a simple run button or right-click
 - Supports `shell`, `bash`, `sh`, `zsh`, `python`, and `py` code blocks
 - Execute shell commands in dedicated terminals or view output in the output channel
-- Python code is executed and output is displayed in a dedicated output channel
+- Python code is executed and output is displayed in a dedicated WebView panel or output channel
 - Each markdown file gets its own terminal for running shell commands
 - Configurable supported languages
 - Commands are executed from the directory of the markdown file
@@ -23,7 +23,7 @@ A Visual Studio Code extension that allows you to run shell scripts and Python c
 
 3. Click the run button to execute the code block
 4. Shell commands will run in a dedicated terminal named "Markdown Shell Runner (index)"
-5. Python code will run and display output in the "Markdown Python Runner" output channel
+5. Python code will run and display output in the "Python Runner" WebView panel or the "Markdown Python Runner" output channel, depending on your settings
 
 ### Using the Context Menu
 
@@ -48,7 +48,20 @@ A Visual Studio Code extension that allows you to run shell scripts and Python c
    ````
 
 3. Right-click and select "Run Shell Code Block" from the context menu
-4. Shell commands will run in a dedicated terminal, while Python code will display output in the output channel
+4. Shell commands will run in a dedicated terminal, while Python code will display output in the WebView panel or output channel
+
+### Python WebView Panel
+
+When running Python code with the WebView panel enabled:
+
+1. A dedicated "Python Runner" panel will open showing:
+   - The Python code that was executed
+   - The output of the code execution
+   - The working directory where the code was run
+   
+2. You can click the "Run Again" button in the panel to re-execute the same code without going back to the markdown file
+
+3. The panel will show any errors that occur during execution
 
 ### Terminal Management
 
@@ -56,7 +69,7 @@ A Visual Studio Code extension that allows you to run shell scripts and Python c
 - Terminals are named "Markdown Shell Runner (index)" where index starts from 0
 - When you run commands from the same file, they will reuse the same terminal
 - When you run commands from a different file, a new terminal will be created with an incremented index
-- Python code always runs in the output channel, not in a terminal
+- Python code runs in a WebView panel or output channel, depending on your settings
 
 ## Extension Settings
 
@@ -65,6 +78,7 @@ This extension contributes the following settings:
 - `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh", "python", "py"]`)
 - `markdownShellRunner.enableCodeLens`: Enable or disable the run button above code blocks (default: `true`)
 - `markdownShellRunner.useTerminal`: Run shell commands in a terminal instead of the output channel (default: `true`)
+- `markdownShellRunner.usePythonWebView`: Run Python code in a WebView panel instead of the output channel (default: `true`)
 
 ## Requirements
 

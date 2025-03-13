@@ -8,6 +8,265 @@ import * as fs from 'fs';
 const fileTerminals = new Map<string, vscode.Terminal>();
 let terminalIndex = 0;
 
+// Class to manage Python WebView panel
+class PythonPanel {
+    private static instance: PythonPanel | undefined;
+    private panel: vscode.WebviewPanel | undefined;
+    private disposables: vscode.Disposable[] = [];
+    private currentCode: string = '';
+    private currentDocumentUri: vscode.Uri | undefined;
+
+    private constructor(private context: vscode.ExtensionContext) {}
+
+    public static getInstance(context: vscode.ExtensionContext): PythonPanel {
+        if (!PythonPanel.instance) {
+            PythonPanel.instance = new PythonPanel(context);
+        }
+        return PythonPanel.instance;
+    }
+
+    public show(code: string, result: string, workingDir: string, documentUri?: vscode.Uri): void {
+        // Store current code and document URI for re-running
+        this.currentCode = code;
+        this.currentDocumentUri = documentUri;
+
+        const columnToShowIn = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
+
+        if (this.panel) {
+            // If we already have a panel, show it in the target column
+            this.panel.reveal(columnToShowIn);
+            this.updateContent(code, result, workingDir);
+        } else {
+            // Otherwise, create a new panel
+            this.panel = vscode.window.createWebviewPanel(
+                'pythonRunner',
+                'Python Runner',
+                columnToShowIn || vscode.ViewColumn.One,
+                {
+                    // Enable scripts in the webview
+                    enableScripts: true,
+                    retainContextWhenHidden: true,
+                    localResourceRoots: [
+                        vscode.Uri.joinPath(this.context.extensionUri, 'media')
+                    ]
+                }
+            );
+
+            // Set the webview's initial html content
+            this.updateContent(code, result, workingDir);
+
+            // Listen for when the panel is disposed
+            // This happens when the user closes the panel or when the panel is closed programmatically
+            this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+
+            // Handle messages from the webview
+            this.panel.webview.onDidReceiveMessage(async (message: { command: string }) => {
+                if (message.command === 'runAgain') {
+                    await this.runCodeAgain();
+                }
+            }, null, this.disposables);
+        }
+    }
+
+    private async runCodeAgain(): Promise<void> {
+        if (!this.currentCode || !this.currentDocumentUri) {
+            vscode.window.showErrorMessage('No code to run');
+            return;
+        }
+
+        try {
+            // Show loading state
+            if (this.panel) {
+                this.panel.webview.postMessage({ command: 'setLoading', value: true });
+            }
+
+            // Run the Python code
+            const result = await runPythonCode(this.currentCode, this.currentDocumentUri);
+            
+            // Get the working directory
+            const workingDir = path.dirname(this.currentDocumentUri.fsPath);
+            
+            // Update the panel with the new result
+            this.updateContent(this.currentCode, result, workingDir);
+            
+            // Hide loading state
+            if (this.panel) {
+                this.panel.webview.postMessage({ command: 'setLoading', value: false });
+            }
+        } catch (error) {
+            // Hide loading state
+            if (this.panel) {
+                this.panel.webview.postMessage({ command: 'setLoading', value: false });
+            }
+
+            // Show error in the panel
+            let errorMessage = 'Unknown error occurred';
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            
+            if (this.panel) {
+                this.panel.webview.postMessage({ 
+                    command: 'showError', 
+                    value: errorMessage 
+                });
+            }
+        }
+    }
+
+    private updateContent(code: string, result: string, workingDir: string): void {
+        if (this.panel) {
+            this.panel.webview.html = this.getWebviewContent(code, result, workingDir);
+        }
+    }
+
+    private getWebviewContent(code: string, result: string, workingDir: string): string {
+        // Escape HTML to prevent XSS
+        const escapeHtml = (text: string): string => {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
+        return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Python Runner</title>
+            <style>
+                body {
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: var(--vscode-editor-font-size);
+                    padding: 0;
+                    margin: 0;
+                    color: var(--vscode-editor-foreground);
+                    background-color: var(--vscode-editor-background);
+                }
+                .container {
+                    padding: 20px;
+                }
+                .section {
+                    margin-bottom: 20px;
+                }
+                .section-title {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    color: var(--vscode-editor-foreground);
+                }
+                .code-block, .result-block {
+                    background-color: var(--vscode-textCodeBlock-background);
+                    padding: 10px;
+                    border-radius: 5px;
+                    overflow: auto;
+                    white-space: pre;
+                    font-family: var(--vscode-editor-font-family);
+                }
+                .info {
+                    font-style: italic;
+                    margin-top: 10px;
+                    color: var(--vscode-descriptionForeground);
+                }
+                .run-button {
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    margin-top: 10px;
+                }
+                .run-button:hover {
+                    background-color: var(--vscode-button-hoverBackground);
+                }
+                .loading {
+                    display: none;
+                    margin-left: 10px;
+                    font-style: italic;
+                }
+                .error {
+                    color: var(--vscode-errorForeground);
+                    margin-top: 10px;
+                    display: none;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="section">
+                    <div class="section-title">Python Code:</div>
+                    <div class="code-block">${escapeHtml(code)}</div>
+                    <button class="run-button" id="runButton">Run Again</button>
+                    <span class="loading" id="loading">Running...</span>
+                    <div class="error" id="error"></div>
+                </div>
+                <div class="section">
+                    <div class="section-title">Output:</div>
+                    <div class="result-block">${escapeHtml(result)}</div>
+                </div>
+                <div class="info">
+                    Working directory: ${escapeHtml(workingDir)}
+                </div>
+            </div>
+            <script>
+                const vscode = acquireVsCodeApi();
+                const runButton = document.getElementById('runButton');
+                const loading = document.getElementById('loading');
+                const error = document.getElementById('error');
+
+                runButton.addEventListener('click', () => {
+                    vscode.postMessage({
+                        command: 'runAgain'
+                    });
+                });
+
+                // Handle messages sent from the extension to the webview
+                window.addEventListener('message', event => {
+                    const message = event.data;
+                    switch (message.command) {
+                        case 'setLoading':
+                            if (message.value) {
+                                loading.style.display = 'inline';
+                                runButton.disabled = true;
+                                error.style.display = 'none';
+                            } else {
+                                loading.style.display = 'none';
+                                runButton.disabled = false;
+                            }
+                            break;
+                        case 'showError':
+                            error.textContent = message.value;
+                            error.style.display = 'block';
+                            break;
+                    }
+                });
+            </script>
+        </body>
+        </html>`;
+    }
+
+    public dispose(): void {
+        PythonPanel.instance = undefined;
+        
+        // Clean up our resources
+        if (this.panel) {
+            this.panel.dispose();
+        }
+
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
+            if (x) {
+                x.dispose();
+            }
+        }
+    }
+}
+
 // Function to get or create a terminal for a specific file
 function getOrCreateTerminal(documentUri: vscode.Uri): vscode.Terminal {
     const filePath = documentUri.fsPath;
@@ -291,7 +550,7 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 // Function to execute a shell code block
-async function executeShellCodeBlock(document: vscode.TextDocument, position: vscode.Position, enabledLanguages: string[]) {
+async function executeShellCodeBlock(document: vscode.TextDocument, position: vscode.Position, enabledLanguages: string[], context: vscode.ExtensionContext) {
     const codeBlock = extractCodeBlock(document, position);
     
     if (!codeBlock) {
@@ -312,26 +571,43 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
     const isPythonBlock = ['python', 'py'].includes(codeBlock.language);
     
     if (isPythonBlock) {
-        // Python code blocks are always executed in the output channel
-        const outputChannel = vscode.window.createOutputChannel('Markdown Python Runner');
-        outputChannel.show();
-        outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
-        outputChannel.appendLine('----------------------------------------');
-        outputChannel.appendLine(codeBlock.code);
-        outputChannel.appendLine('----------------------------------------');
+        // Get the configuration for Python WebView
+        const usePythonWebView = config.get<boolean>('usePythonWebView', true);
         
         try {
             // Run the Python code
             const result = await runPythonCode(codeBlock.code, document.uri);
             
-            // Display the result
-            outputChannel.appendLine('Output:');
-            outputChannel.appendLine('----------------------------------------');
-            outputChannel.appendLine(result);
-            outputChannel.appendLine('----------------------------------------');
-            outputChannel.appendLine('Python code executed successfully');
-            outputChannel.appendLine(`Working directory: ${path.dirname(document.uri.fsPath)}`);
+            // Get the working directory
+            const workingDir = path.dirname(document.uri.fsPath);
+            
+            if (usePythonWebView) {
+                // Show the result in the Python panel
+                PythonPanel.getInstance(context).show(codeBlock.code, result, workingDir, document.uri);
+            } else {
+                // Show the result in the output channel
+                const outputChannel = vscode.window.createOutputChannel('Markdown Python Runner');
+                outputChannel.show();
+                outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
+                outputChannel.appendLine('----------------------------------------');
+                outputChannel.appendLine(codeBlock.code);
+                outputChannel.appendLine('----------------------------------------');
+                outputChannel.appendLine('Output:');
+                outputChannel.appendLine('----------------------------------------');
+                outputChannel.appendLine(result);
+                outputChannel.appendLine('----------------------------------------');
+                outputChannel.appendLine('Python code executed successfully');
+                outputChannel.appendLine(`Working directory: ${workingDir}`);
+            }
         } catch (error) {
+            // Create an output channel for errors
+            const outputChannel = vscode.window.createOutputChannel('Markdown Python Runner');
+            outputChannel.show();
+            outputChannel.appendLine(`Error executing Python code:`);
+            outputChannel.appendLine('----------------------------------------');
+            outputChannel.appendLine(codeBlock.code);
+            outputChannel.appendLine('----------------------------------------');
+            
             if (error instanceof Error) {
                 outputChannel.appendLine(`Error: ${error.message}`);
             } else {
@@ -421,11 +697,26 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
     
+    // Listen for configuration changes
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('markdownShellRunner.enabledLanguages')) {
+                // Update the enabled languages
+                const config = vscode.workspace.getConfiguration('markdownShellRunner');
+                const newEnabledLanguages = config.get<string[]>('enabledLanguages') || ['shell', 'bash', 'sh', 'zsh', 'python', 'py'];
+                
+                // Update the enabledLanguages array
+                enabledLanguages.length = 0;
+                enabledLanguages.push(...newEnabledLanguages);
+            }
+        })
+    );
+    
     // Register the command to run code blocks at a specific position
     context.subscriptions.push(
         vscode.commands.registerCommand('markdown-shell-runner.runCodeBlockAtPosition', async (uri: vscode.Uri, position: vscode.Position) => {
             const document = await vscode.workspace.openTextDocument(uri);
-            await executeShellCodeBlock(document, position, enabledLanguages);
+            await executeShellCodeBlock(document, position, enabledLanguages, context);
         })
     );
     
@@ -438,7 +729,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         
         const position = editor.selection.active;
-        await executeShellCodeBlock(editor.document, position, enabledLanguages);
+        await executeShellCodeBlock(editor.document, position, enabledLanguages, context);
     });
     
     context.subscriptions.push(disposable);
