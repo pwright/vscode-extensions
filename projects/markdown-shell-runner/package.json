@@ -2,7 +2,7 @@
   "name": "markdown-shell-runner",
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "shepherd-dev",
   "engines": {
     "vscode": "^1.85.0"

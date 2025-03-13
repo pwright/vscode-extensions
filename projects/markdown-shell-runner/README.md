@@ -83,6 +83,12 @@ See the [test README](src/test/README.md) for more information about the tests.
 
 ## Release Notes
 
+### 0.3.1
+
+- Fixed issue with exclamation marks in shell commands causing quote mismatching
+- Improved terminal handling to properly escape special characters
+- Added support for disabling history expansion in bash shells
+
 ### 0.3.0
 
 - Added feature to run shell commands in dedicated terminals

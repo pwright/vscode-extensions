@@ -19,7 +19,11 @@ function getOrCreateTerminal(documentUri: vscode.Uri): vscode.Terminal {
     // Create a new terminal for this file
     const terminal = vscode.window.createTerminal({
         name: `Markdown Shell Runner (${terminalIndex})`,
-        cwd: path.dirname(filePath)
+        cwd: path.dirname(filePath),
+        env: {
+            // Set HISTCONTROL to ignore commands starting with space and duplicates
+            HISTCONTROL: 'ignoreboth'
+        }
     });
     
     // Store the terminal in the map
@@ -231,8 +235,19 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
         // Show the terminal
         terminal.show();
         
+        // Determine the shell type
+        const isWindows = os.platform() === 'win32';
+        
+        if (!isWindows) {
+            // For non-Windows systems, first set the shell to ignore history expansion
+            terminal.sendText('set +H', true);
+        }
+        
+        // Escape exclamation marks in the code
+        const escapedCode = codeBlock.code.replace(/!/g, '\\!');
+        
         // Send the command to the terminal
-        terminal.sendText(codeBlock.code);
+        terminal.sendText(escapedCode);
     } else {
         // Create and show output channel
         const outputChannel = vscode.window.createOutputChannel('Markdown Shell Runner');
