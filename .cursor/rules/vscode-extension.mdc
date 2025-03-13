@@ -13,8 +13,4 @@ alwaysApply: true
 
 # unittest
 
-- 변경할때마다 맞춰서 unittest 작성 혹은 업데이트
-
-## unittest stack
-
-- 
+- 기능이 추가되거나 변경될 때마다 맞춰서 unittest 작성 혹은 업데이트 해줘

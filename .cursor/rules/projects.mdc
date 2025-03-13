@@ -1,10 +1,12 @@
 ---
 description: projects rule
-globs: projects/**/*
+globs: projects/*
 alwaysApply: true
 ---
-# projects rule
+# project rule
 
 * projects 하위의 폴더들을 각각의 vscode extension project로 구분
 * 각 project마다 개별 환경을 셋팅해서 사용
 * 최신 버전의 vscode extension project를 구성
+* project의 개발자 명은 shepherd.dev 로 설정
+* LICENSE 파일은 MIT 파일로 설정
