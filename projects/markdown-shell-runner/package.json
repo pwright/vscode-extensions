@@ -3,7 +3,7 @@
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
   "version": "0.3.0",
-  "publisher": "example",
+  "publisher": "shepherddev",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -93,10 +93,10 @@
     "runner",
     "execute"
   ],
-  "author": "",
+  "author": "shepherddev",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/markdown-shell-runner.git"
+    "url": "https://github.com/shepherd-dev/markdown-shell-runner.git"
   }
 }
