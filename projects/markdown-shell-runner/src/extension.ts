@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
+import * as fs from 'fs';
 
 // Map to track terminals for each file
 const fileTerminals = new Map<string, vscode.Terminal>();
@@ -42,7 +43,8 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
     
     // Regular expression to match complete markdown code blocks with content
     // This ensures that empty code blocks or incomplete blocks are not matched
-    const codeBlockRegex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to include python and py languages
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -72,7 +74,8 @@ export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: s
     const codeBlocks: { code: string, language: string, range: vscode.Range }[] = [];
     
     // Regular expression to match complete markdown code blocks with content
-    const codeBlockRegex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to include python and py languages
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -143,6 +146,76 @@ export async function runShellCommand(command: string, documentUri?: vscode.Uri)
     });
 }
 
+// Function to run Python code
+export async function runPythonCode(code: string, documentUri?: vscode.Uri): Promise<string> {
+    return new Promise((resolve, reject) => {
+        // Determine the working directory
+        let cwd: string | undefined;
+        
+        if (documentUri) {
+            // Use the directory of the markdown file
+            const filePath = documentUri.fsPath;
+            cwd = path.dirname(filePath);
+        } else {
+            // Fallback to workspace root
+            cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        }
+        
+        // Create a temporary Python file
+        const tempDir = os.tmpdir();
+        const tempFile = path.join(tempDir, `markdown_python_${Date.now()}.py`);
+        
+        // Write the code to the temporary file
+        fs.writeFileSync(tempFile, code);
+        
+        // Determine the Python executable
+        const pythonCommand = os.platform() === 'win32' ? 'python' : 'python3';
+        
+        // Execute the Python file
+        const childProcess = cp.spawn(pythonCommand, [tempFile], {
+            env: { ...process.env },
+            cwd: cwd
+        });
+        
+        let stdout = '';
+        let stderr = '';
+        
+        childProcess.stdout.on('data', (data: Buffer) => {
+            stdout += data.toString();
+        });
+        
+        childProcess.stderr.on('data', (data: Buffer) => {
+            stderr += data.toString();
+        });
+        
+        childProcess.on('close', (code: number | null) => {
+            // Clean up the temporary file
+            try {
+                fs.unlinkSync(tempFile);
+            } catch (err) {
+                console.error('Failed to delete temporary Python file:', err);
+            }
+            
+            if (code === 0) {
+                resolve(stdout);
+            } else {
+                reject(new Error(`Python execution failed with exit code ${code}\n${stderr}`));
+            }
+        });
+        
+        childProcess.on('error', (err: Error) => {
+            // Clean up the temporary file
+            try {
+                fs.unlinkSync(tempFile);
+            } catch (cleanupErr) {
+                console.error('Failed to delete temporary Python file:', cleanupErr);
+            }
+            
+            reject(err);
+        });
+    });
+}
+
 // CodeLens provider for shell code blocks
 class ShellCodeLensProvider implements vscode.CodeLensProvider {
     private codeLenses: vscode.CodeLens[] = [];
@@ -152,7 +225,8 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
 
     constructor() {
         // Updated regex to match only complete code blocks with content
-        this.regex = /```(shell|bash|sh|zsh)\s*\n([\s\S]*?)\n\s*```/g;
+        // Including Python code blocks
+        this.regex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
         
         // Watch for document changes to refresh code lenses
         vscode.workspace.onDidChangeTextDocument(e => {
@@ -195,9 +269,17 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
             
             // Only add CodeLens if there's actual content in the code block
             if (matches[2] && matches[2].trim().length > 0) {
+                // Determine the language
+                const language = matches[1];
+                const isPythonBlock = ['python', 'py'].includes(language);
+                
+                // Set the title based on the language
+                const title = isPythonBlock ? "▶ Run Python" : "▶ Run";
+                const tooltip = isPythonBlock ? "Run this Python code block" : "Run this shell code block";
+                
                 this.codeLenses.push(new vscode.CodeLens(range, {
-                    title: "▶ Run",
-                    tooltip: "Run this shell code block",
+                    title: title,
+                    tooltip: tooltip,
                     command: "markdown-shell-runner.runCodeBlockAtPosition",
                     arguments: [document.uri, position]
                 }));
@@ -213,7 +295,7 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
     const codeBlock = extractCodeBlock(document, position);
     
     if (!codeBlock) {
-        vscode.window.showErrorMessage('No shell code block found at cursor position');
+        vscode.window.showErrorMessage('No code block found at cursor position');
         return;
     }
     
@@ -226,6 +308,40 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
     const config = vscode.workspace.getConfiguration('markdownShellRunner');
     const useTerminal = config.get<boolean>('useTerminal', true);
     
+    // Check if it's a Python code block
+    const isPythonBlock = ['python', 'py'].includes(codeBlock.language);
+    
+    if (isPythonBlock) {
+        // Python code blocks are always executed in the output channel
+        const outputChannel = vscode.window.createOutputChannel('Markdown Python Runner');
+        outputChannel.show();
+        outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
+        outputChannel.appendLine('----------------------------------------');
+        outputChannel.appendLine(codeBlock.code);
+        outputChannel.appendLine('----------------------------------------');
+        
+        try {
+            // Run the Python code
+            const result = await runPythonCode(codeBlock.code, document.uri);
+            
+            // Display the result
+            outputChannel.appendLine('Output:');
+            outputChannel.appendLine('----------------------------------------');
+            outputChannel.appendLine(result);
+            outputChannel.appendLine('----------------------------------------');
+            outputChannel.appendLine('Python code executed successfully');
+            outputChannel.appendLine(`Working directory: ${path.dirname(document.uri.fsPath)}`);
+        } catch (error) {
+            if (error instanceof Error) {
+                outputChannel.appendLine(`Error: ${error.message}`);
+            } else {
+                outputChannel.appendLine(`Unknown error occurred`);
+            }
+        }
+        return;
+    }
+    
+    // For shell code blocks
     if (useTerminal) {
         // Get or create a terminal for this file
         const terminal = getOrCreateTerminal(document.uri);

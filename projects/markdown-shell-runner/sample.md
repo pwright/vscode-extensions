@@ -16,6 +16,38 @@ ls -la
 
 The commands above will be executed from the directory where this markdown file is located.
 
+## Python Code Example
+
+Place your cursor inside the code block below and look for the "▶ Run Python" button above the code block:
+
+```python
+print("Hello from Python!")
+print("Here's a simple calculation:")
+for i in range(1, 6):
+    print(f"{i} squared is {i**2}")
+
+import os
+print(f"Current working directory: {os.getcwd()}")
+print("This directory contains:")
+for item in os.listdir('.'):
+    print(f"- {item}")
+```
+
+The Python code above will be executed and the output will be displayed in the "Markdown Python Runner" output channel.
+
+## Another Python Example
+
+```py
+# This is also a Python script (using the 'py' language identifier)
+import sys
+print(f"Python version: {sys.version}")
+print(f"Python executable: {sys.executable}")
+
+# Simple list comprehension
+numbers = [x for x in range(1, 11)]
+print(f"Numbers from 1 to 10: {numbers}")
+```
+
 ## Another Example with Shell
 
 ```shell

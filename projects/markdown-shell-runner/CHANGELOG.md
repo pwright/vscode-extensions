@@ -2,6 +2,13 @@
 
 All notable changes to the "Markdown Shell Runner" extension will be documented in this file.
 
+## [0.4.0] - 2024-07-02
+
+- Added support for running Python code blocks
+- Added Python language detection for `python` and `py` code blocks
+- Python code execution results are displayed in a dedicated output channel
+- Updated documentation to include Python code execution examples
+
 ## [0.3.2] - 2024-07-01
 
 - Fixed issue where run button would appear for incomplete code blocks

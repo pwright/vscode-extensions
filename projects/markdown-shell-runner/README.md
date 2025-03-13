@@ -1,13 +1,14 @@
 # Markdown Shell Runner
 
-A Visual Studio Code extension that allows you to run shell scripts directly from markdown code blocks.
+A Visual Studio Code extension that allows you to run shell scripts and Python code directly from markdown code blocks.
 
 ## Features
 
-- Run shell scripts from markdown code blocks with a simple run button or right-click
-- Supports `shell`, `bash`, `sh`, and `zsh` code blocks
-- Execute commands in dedicated terminals or view output in the output channel
-- Each markdown file gets its own terminal for running commands
+- Run shell scripts and Python code from markdown code blocks with a simple run button or right-click
+- Supports `shell`, `bash`, `sh`, `zsh`, `python`, and `py` code blocks
+- Execute shell commands in dedicated terminals or view output in the output channel
+- Python code is executed and output is displayed in a dedicated output channel
+- Each markdown file gets its own terminal for running shell commands
 - Configurable supported languages
 - Commands are executed from the directory of the markdown file
 
@@ -16,17 +17,18 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
 ### Using the Run Button
 
 1. Open a markdown file in VS Code
-2. Look for the "▶ Run" button that appears above shell code blocks:
+2. Look for the "▶ Run" or "▶ Run Python" button that appears above code blocks:
 
    ![Run Button](images/run-button.png)
 
 3. Click the run button to execute the code block
-4. The command will run in a dedicated terminal named "Markdown Shell Runner (index)"
+4. Shell commands will run in a dedicated terminal named "Markdown Shell Runner (index)"
+5. Python code will run and display output in the "Markdown Python Runner" output channel
 
 ### Using the Context Menu
 
 1. Open a markdown file in VS Code
-2. Place your cursor inside a shell code block like:
+2. Place your cursor inside a code block like:
 
    ````markdown
    ```bash
@@ -35,22 +37,33 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
    ```
    ````
 
+   Or for Python:
+
+   ````markdown
+   ```python
+   print("Hello, World!")
+   for i in range(5):
+       print(f"Number: {i}")
+   ```
+   ````
+
 3. Right-click and select "Run Shell Code Block" from the context menu
-4. The command will run in a dedicated terminal
+4. Shell commands will run in a dedicated terminal, while Python code will display output in the output channel
 
 ### Terminal Management
 
-- Each markdown file gets its own dedicated terminal
+- Each markdown file gets its own dedicated terminal for shell commands
 - Terminals are named "Markdown Shell Runner (index)" where index starts from 0
 - When you run commands from the same file, they will reuse the same terminal
 - When you run commands from a different file, a new terminal will be created with an incremented index
+- Python code always runs in the output channel, not in a terminal
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
-- `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh"]`)
-- `markdownShellRunner.enableCodeLens`: Enable or disable the run button above shell code blocks (default: `true`)
+- `markdownShellRunner.enabledLanguages`: Array of languages that can be executed from markdown code blocks (default: `["shell", "bash", "sh", "zsh", "python", "py"]`)
+- `markdownShellRunner.enableCodeLens`: Enable or disable the run button above code blocks (default: `true`)
 - `markdownShellRunner.useTerminal`: Run shell commands in a terminal instead of the output channel (default: `true`)
 
 ## Requirements
