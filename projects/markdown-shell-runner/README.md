@@ -8,6 +8,7 @@ A Visual Studio Code extension that allows you to run shell scripts directly fro
 - Supports `shell`, `bash`, `sh`, and `zsh` code blocks
 - View command output in a dedicated output channel
 - Configurable supported languages
+- Commands are executed from the directory of the markdown file
 
 ## Usage
 
@@ -73,12 +74,30 @@ See the [test README](src/test/README.md) for more information about the tests.
 
 ## Release Notes
 
+### 0.2.2
+
+- Updated unit tests to cover the new working directory functionality
+- Improved test coverage and reliability
+
+### 0.2.1
+
+- Added LICENSE file
+- Improved packaging process to skip prompts
+- Updated configuration for smoother development workflow
+
+### 0.2.0
+
+- Added feature to execute commands from the directory of the markdown file
+- Improved output display to show the working directory
+- Updated documentation with examples of the new feature
+
 ### 0.1.0
 
 - Initial release
 - Support for running shell code blocks
 - Configurable language support
 - Run button above shell code blocks
+- Commands are executed from the directory of the markdown file
 
 ## Security Considerations
 

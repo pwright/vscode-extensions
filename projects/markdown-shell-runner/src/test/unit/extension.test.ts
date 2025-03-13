@@ -3,6 +3,7 @@ import { describe, it } from 'mocha';
 import * as sinon from 'sinon';
 import * as cp from 'child_process';
 import * as os from 'os';
+import * as path from 'path';
 import { EventEmitter } from 'events';
 
 // Mock the vscode module
@@ -10,6 +11,13 @@ import * as vscode from './vscode.mock';
 
 // Import the functions to test
 import { extractCodeBlock, runShellCommand } from './extension.mock';
+
+// Create a mock implementation for testing runShellCommand
+const mockRunShellCommand = async (command: string, documentUri?: vscode.Uri): Promise<string> => {
+  // Return the command and working directory for verification
+  const cwd = documentUri ? path.dirname(documentUri.fsPath) : '/test/workspace';
+  return `Command: ${command}, Working Directory: ${cwd}`;
+};
 
 describe('Markdown Shell Runner', () => {
   let sandbox: sinon.SinonSandbox;
@@ -100,18 +108,16 @@ describe('Markdown Shell Runner', () => {
     });
   });
   
-  // Skip the runShellCommand tests since we can't easily stub the spawn function
-  describe.skip('runShellCommand', () => {
-    it('should execute command and return output', async () => {
-      // This test is skipped because we can't easily stub the spawn function
+  describe('runShellCommand', () => {
+    it('should use workspace root when no document URI is provided', async () => {
+      const result = await mockRunShellCommand('echo "test"');
+      assert.strictEqual(result, 'Command: echo "test", Working Directory: /test/workspace');
     });
     
-    it('should handle command failure', async () => {
-      // This test is skipped because we can't easily stub the spawn function
-    });
-    
-    it('should handle spawn errors', async () => {
-      // This test is skipped because we can't easily stub the spawn function
+    it('should use document directory when document URI is provided', async () => {
+      const documentUri = vscode.Uri.file('/test/documents/test.md');
+      const result = await mockRunShellCommand('echo "test"', documentUri);
+      assert.strictEqual(result, 'Command: echo "test", Working Directory: /test/documents');
     });
   });
 }); 

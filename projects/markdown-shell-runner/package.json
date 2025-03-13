@@ -2,10 +2,14 @@
   "name": "markdown-shell-runner",
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "publisher": "example",
   "engines": {
     "vscode": "^1.85.0"
+  },
+  "vsce": {
+    "dependencies": false,
+    "yarn": false
   },
   "categories": [
     "Other"

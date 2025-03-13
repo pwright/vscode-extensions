@@ -7,8 +7,20 @@ export class Position {
   constructor(public line: number, public character: number) {}
 }
 
+export class Uri {
+  static file(path: string): Uri {
+    return new Uri(path);
+  }
+  
+  constructor(public fsPath: string) {}
+}
+
 export class TextDocument {
-  constructor(public content: string) {}
+  constructor(public content: string, public uri?: Uri) {
+    if (!uri) {
+      this.uri = Uri.file('/test/document.md');
+    }
+  }
   getText() {
     return this.content;
   }

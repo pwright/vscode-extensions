@@ -14,6 +14,8 @@ echo "Files in current directory:"
 ls -la
 ```
 
+The commands above will be executed from the directory where this markdown file is located.
+
 ## Another Example with Shell
 
 ```shell
@@ -30,6 +32,8 @@ uname -a
 # This is an sh script
 echo "Environment variables:"
 env | grep PATH
+echo "Working directory (should be the directory of this markdown file):"
+pwd
 ```
 
 ## Example with zsh (if available)
@@ -51,6 +55,18 @@ console.log("This is JavaScript, not a shell script");
 ## Using the Run Button
 
 The run button appears above shell code blocks and allows you to execute the code with a single click. This is a convenient way to run shell scripts without having to use the context menu.
+
+## Working Directory
+
+All commands are executed from the directory where the markdown file is located. This means that relative file paths in your commands will be resolved relative to the markdown file, not the workspace root.
+
+For example, if your markdown file is located at `/path/to/docs/example.md`, and you run the following command:
+
+```bash
+ls -la
+```
+
+It will list the files in the `/path/to/docs/` directory.
 
 ## Disabling the Run Button
 

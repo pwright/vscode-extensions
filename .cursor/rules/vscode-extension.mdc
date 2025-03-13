@@ -1,0 +1,20 @@
+---
+description: vscode extension
+globs: projects/*
+alwaysApply: true
+---
+# vscode extension rule
+
+- 변경이 될 때마다 각 project의 develop 버전을 올려줘
+
+# tech stack
+
+- typescript
+
+# unittest
+
+- 변경할때마다 맞춰서 unittest 작성 혹은 업데이트
+
+## unittest stack
+
+- 
