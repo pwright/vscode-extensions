@@ -8,5 +8,13 @@ alwaysApply: true
 - projects 하위의 폴더들을 각각의 vscode extension project로 구분
 - 각 project마다 개별 환경을 셋팅해서 사용
 - 최신 버전의 vscode extension project를 구성
-- project의 publisher는 shepherd-dev 로 설정
-- LICENSE 파일은 MIT 파일로 설정
+- update CHANGELOG.md when version increase
+- All project publisher is shepherd-dev
+- All project github is 'https://github.com/shepherd44/vscode-extensions'
+- All project LICENSE is MIT
+
+# gitops
+
+- 새로운 기능을 추가하거나 변경할 경우 feature branch 생성 후 작업
+- 모든 작업이 완료된 다음 commit 하고 develop branch에 병합
+  - 병합 시 fast-forward 하지 않고 병합 커밋을 만들도록 해줘

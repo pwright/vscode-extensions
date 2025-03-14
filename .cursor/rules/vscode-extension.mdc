@@ -3,14 +3,24 @@ description: vscode extension
 globs: projects/*
 alwaysApply: true
 ---
-# vscode extension rule
+# vscode extension development rule
 
-- 변경이 될 때마다 각 project의 develop 버전을 올려줘
+- 기능이 추가되거나 변경이 될 때마다 각 project의 develop version을 올려줘
 
-# tech stack
+# vscode extension development stack
 
-- typescript
+- language
+  - typescript
+- build package
+  - tsc
+  - @vscode/vsce
 
 # unittest
 
 - 기능이 추가되거나 변경될 때마다 맞춰서 unittest 작성 혹은 업데이트 해줘
+
+## unittest required package
+
+- @vscode/test-cli
+- @vscode/electron
+- mocha

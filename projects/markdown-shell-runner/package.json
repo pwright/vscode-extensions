@@ -2,7 +2,7 @@
   "name": "markdown-shell-runner",
   "displayName": "Markdown Shell Runner",
   "description": "Run shell scripts directly from markdown code blocks",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "shepherd-dev",
   "engines": {
     "vscode": "^1.85.0"
@@ -75,8 +75,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
-    "test": "mocha out/test/unit/**/*.js",
+    "pretest": "npm run compile && rm -rf .vscode-test/user-data",
+    "test": "vscode-test",
     "package": "vsce package",
     "publish": "vsce publish",
     "lint": "eslint src --ext ts"

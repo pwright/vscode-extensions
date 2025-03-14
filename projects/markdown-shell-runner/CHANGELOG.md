@@ -2,7 +2,14 @@
 
 All notable changes to the "Markdown Shell Runner" extension will be documented in this file.
 
-## [0.4.0] - 2024-07-02
+## [0.5.1] - 2024-07-03
+
+- Updated test configuration to use vscode-test for more reliable testing
+- Fixed test runner configuration to properly work with @vscode/test-cli
+- Added automatic cleanup of test environment before running tests
+- Improved test runner setup for better integration with VS Code extension testing
+
+## [0.5.0] - 2024-07-02
 
 - Added support for running Python code blocks
 - Added Python language detection for `python` and `py` code blocks
