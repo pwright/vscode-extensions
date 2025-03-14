@@ -90,7 +90,7 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^2.x.x",
+    "@vscode/vsce": "^3.2.2",
     "chai": "^4.x.x",
     "mocha": "^10.x.x",
     "sinon": "^17.x.x",
