@@ -268,17 +268,27 @@ class PythonPanel {
 }
 
 // Function to get or create a terminal for a specific file
-function getOrCreateTerminal(documentUri: vscode.Uri): vscode.Terminal {
+function getOrCreateTerminal(documentUri: vscode.Uri, terminalName?: string): vscode.Terminal {
     const filePath = documentUri.fsPath;
     
-    // Check if a terminal already exists for this file
-    if (fileTerminals.has(filePath)) {
-        return fileTerminals.get(filePath)!;
+    // If a terminal name is provided, use it as the key
+    const terminalKey = terminalName ? `${terminalName}` : filePath;
+    
+    // Check if a terminal already exists for this key
+    if (fileTerminals.has(terminalKey)) {
+        const existingTerminal = fileTerminals.get(terminalKey)!;
+        // Verify the terminal is still active
+        if (existingTerminal.exitStatus === undefined) {
+            return existingTerminal;
+        } else {
+            // Terminal was closed, remove it from the map
+            fileTerminals.delete(terminalKey);
+        }
     }
     
-    // Create a new terminal for this file
+    // Create a new terminal for this file/name
     const terminal = vscode.window.createTerminal({
-        name: `Markdown Shell Runner (${terminalIndex})`,
+        name: terminalName || `Markdown Shell Runner (${terminalIndex})`,
         cwd: path.dirname(filePath),
         env: {
             // Set HISTCONTROL to ignore commands starting with space and duplicates
@@ -287,23 +297,24 @@ function getOrCreateTerminal(documentUri: vscode.Uri): vscode.Terminal {
     });
     
     // Store the terminal in the map
-    fileTerminals.set(filePath, terminal);
+    fileTerminals.set(terminalKey, terminal);
     
-    // Increment the terminal index for the next terminal
-    terminalIndex++;
+    // Increment the terminal index for the next terminal (only when not using a custom name)
+    if (!terminalName) {
+        terminalIndex++;
+    }
     
     return terminal;
 }
 
 // Function to extract code blocks from markdown
-export function extractCodeBlock(document: vscode.TextDocument, position: vscode.Position): { code: string, language: string, range: vscode.Range } | undefined {
+export function extractCodeBlock(document: vscode.TextDocument, position: vscode.Position): { code: string, language: string, terminalName?: string, range: vscode.Range } | undefined {
     const text = document.getText();
     const offset = document.offsetAt(position);
     
     // Regular expression to match complete markdown code blocks with content
-    // This ensures that empty code blocks or incomplete blocks are not matched
-    // Updated to include python and py languages
-    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to capture optional terminal name parameter
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -311,16 +322,17 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
         const endOffset = match.index + match[0].length;
         
         if (startOffset <= offset && offset <= endOffset) {
-            // Extract the language and code content
+            // Extract the language, optional terminal name, and code content
             const language = match[1];
-            const code = match[2];
+            const terminalName = match[2]; // This will be undefined if no terminal name is provided
+            const code = match[3];
             
             // Calculate the range of the code block
             const startPos = document.positionAt(startOffset);
             const endPos = document.positionAt(endOffset);
             const range = new vscode.Range(startPos, endPos);
             
-            return { code, language, range };
+            return { code, language, terminalName, range };
         }
     }
     
@@ -328,29 +340,30 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
 }
 
 // Function to find all shell code blocks in a document
-export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: string, language: string, range: vscode.Range }[] {
+export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: string, language: string, terminalName?: string, range: vscode.Range }[] {
     const text = document.getText();
-    const codeBlocks: { code: string, language: string, range: vscode.Range }[] = [];
+    const codeBlocks: { code: string, language: string, terminalName?: string, range: vscode.Range }[] = [];
     
     // Regular expression to match complete markdown code blocks with content
-    // Updated to include python and py languages
-    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to capture optional terminal name parameter
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
         const startOffset = match.index;
         const endOffset = match.index + match[0].length;
         
-        // Extract the language and code content
+        // Extract the language, optional terminal name, and code content
         const language = match[1];
-        const code = match[2];
+        const terminalName = match[2]; // This will be undefined if no terminal name is provided
+        const code = match[3];
         
         // Calculate the range of the code block
         const startPos = document.positionAt(startOffset);
         const endPos = document.positionAt(endOffset);
         const range = new vscode.Range(startPos, endPos);
         
-        codeBlocks.push({ code, language, range });
+        codeBlocks.push({ code, language, terminalName, range });
     }
     
     return codeBlocks;
@@ -483,9 +496,8 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
     constructor() {
-        // Updated regex to match only complete code blocks with content
-        // Including Python code blocks
-        this.regex = /```(shell|bash|sh|zsh|python|py)\s*\n([\s\S]*?)\n\s*```/g;
+        // Updated regex to match code blocks with optional terminal name parameter
+        this.regex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
         
         // Watch for document changes to refresh code lenses
         vscode.workspace.onDidChangeTextDocument(e => {
@@ -527,14 +539,23 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
             const range = new vscode.Range(position, position);
             
             // Only add CodeLens if there's actual content in the code block
-            if (matches[2] && matches[2].trim().length > 0) {
-                // Determine the language
+            if (matches[3] && matches[3].trim().length > 0) {
+                // Determine the language and terminal name
                 const language = matches[1];
+                const terminalName = matches[2]; // This will be undefined if no terminal name is provided
                 const isPythonBlock = ['python', 'py'].includes(language);
                 
-                // Set the title based on the language
-                const title = isPythonBlock ? "▶ Run Python" : "▶ Run";
-                const tooltip = isPythonBlock ? "Run this Python code block" : "Run this shell code block";
+                // Set the title based on the language and terminal name
+                let title = isPythonBlock ? "▶ Run Python" : "▶ Run";
+                if (terminalName && !isPythonBlock) {
+                    title += ` (${terminalName})`;
+                }
+                
+                const tooltip = isPythonBlock 
+                    ? "Run this Python code block" 
+                    : terminalName 
+                        ? `Run this shell code block in terminal '${terminalName}'`
+                        : "Run this shell code block";
                 
                 this.codeLenses.push(new vscode.CodeLens(range, {
                     title: title,
@@ -619,8 +640,8 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
     
     // For shell code blocks
     if (useTerminal) {
-        // Get or create a terminal for this file
-        const terminal = getOrCreateTerminal(document.uri);
+        // Get or create a terminal for this file, using the terminal name if provided
+        const terminal = getOrCreateTerminal(document.uri, codeBlock.terminalName);
         
         // Show the terminal
         terminal.show();
@@ -643,6 +664,9 @@ async function executeShellCodeBlock(document: vscode.TextDocument, position: vs
         const outputChannel = vscode.window.createOutputChannel('Markdown Shell Runner');
         outputChannel.show();
         outputChannel.appendLine(`Executing ${codeBlock.language} code block:`);
+        if (codeBlock.terminalName) {
+            outputChannel.appendLine(`Terminal: ${codeBlock.terminalName}`);
+        }
         outputChannel.appendLine('----------------------------------------');
         outputChannel.appendLine(codeBlock.code);
         outputChannel.appendLine('----------------------------------------');

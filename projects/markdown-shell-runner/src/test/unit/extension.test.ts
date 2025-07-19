@@ -49,6 +49,7 @@ suite('Markdown Shell Runner', () => {
       assert.ok(result);
       assert.strictEqual(result!.language, 'bash');
       assert.strictEqual(result!.code, 'echo "Hello, World!"');
+      assert.strictEqual(result!.terminalName, undefined);
     });
     
     test('should extract shell code block', () => {
@@ -69,6 +70,70 @@ suite('Markdown Shell Runner', () => {
       assert.ok(result);
       assert.strictEqual(result!.language, 'shell');
       assert.strictEqual(result!.code, 'ls -la');
+      assert.strictEqual(result!.terminalName, undefined);
+    });
+    
+    test('should extract bash code block with terminal name', () => {
+      const content = [
+        '# Test Document',
+        '',
+        '```bash,west',
+        'echo "Hello from west terminal!"',
+        '```',
+        ''
+      ].join('\n');
+      
+      const document = new vscode.TextDocument(content);
+      const position = new vscode.Position(3, 5); // Inside the code block
+      
+      const result = extractCodeBlock(document, position);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.language, 'bash');
+      assert.strictEqual(result!.code, 'echo "Hello from west terminal!"');
+      assert.strictEqual(result!.terminalName, 'west');
+    });
+    
+    test('should extract shell code block with terminal name and spaces', () => {
+      const content = [
+        '# Test Document',
+        '',
+        '```shell, east',
+        'ls -la',
+        '```',
+        ''
+      ].join('\n');
+      
+      const document = new vscode.TextDocument(content);
+      const position = new vscode.Position(3, 2); // Inside the code block
+      
+      const result = extractCodeBlock(document, position);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.language, 'shell');
+      assert.strictEqual(result!.code, 'ls -la');
+      assert.strictEqual(result!.terminalName, 'east');
+    });
+    
+    test('should extract zsh code block with terminal name', () => {
+      const content = [
+        '# Test Document',
+        '',
+        '```zsh,my-terminal',
+        'echo "ZSH test"',
+        '```',
+        ''
+      ].join('\n');
+      
+      const document = new vscode.TextDocument(content);
+      const position = new vscode.Position(3, 2); // Inside the code block
+      
+      const result = extractCodeBlock(document, position);
+      
+      assert.ok(result);
+      assert.strictEqual(result!.language, 'zsh');
+      assert.strictEqual(result!.code, 'echo "ZSH test"');
+      assert.strictEqual(result!.terminalName, 'my-terminal');
     });
     
     test('should return undefined for non-shell code blocks', () => {

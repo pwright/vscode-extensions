@@ -2,6 +2,14 @@
 
 All notable changes to the "Markdown Shell Runner" extension will be documented in this file.
 
+## [0.6.0] - 2024-07-03
+
+- Added support for terminal name parameters in shell code blocks
+- Shell code blocks can now specify a custom terminal name using syntax like `bash,west`
+- Code blocks with the same terminal name will reuse the same terminal
+- Updated run button tooltips to show terminal names when specified
+- Improved terminal management to support named terminals alongside file-based terminals
+
 ## [0.5.1] - 2024-07-03
 
 - Updated test configuration to use vscode-test for more reliable testing

@@ -4,12 +4,12 @@ import * as os from 'os';
 import * as path from 'path';
 
 // Function to extract code blocks from markdown
-export function extractCodeBlock(document: vscode.TextDocument, position: vscode.Position): { code: string, language: string, range: vscode.Range } | undefined {
+export function extractCodeBlock(document: vscode.TextDocument, position: vscode.Position): { code: string, language: string, terminalName?: string, range: vscode.Range } | undefined {
     const text = document.getText();
     const offset = document.offsetAt(position);
     
-    // Regular expression to match markdown code blocks
-    const codeBlockRegex = /```(shell|bash|sh|zsh)[\s\S]*?```/g;
+    // Regular expression to match markdown code blocks with optional terminal name parameter
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -17,20 +17,17 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
         const endOffset = match.index + match[0].length;
         
         if (startOffset <= offset && offset <= endOffset) {
-            // Extract the language and code content
-            const fullMatch = match[0];
+            // Extract the language, optional terminal name, and code content
             const language = match[1];
-            
-            // Extract the code content (remove the opening and closing ```)
-            const codeLines = fullMatch.split('\n');
-            const code = codeLines.slice(1, codeLines.length - 1).join('\n');
+            const terminalName = match[2]; // This will be undefined if no terminal name is provided
+            const code = match[3];
             
             // Calculate the range of the code block
             const startPos = document.positionAt(startOffset);
             const endPos = document.positionAt(endOffset);
             const range = new vscode.Range(startPos, endPos);
             
-            return { code, language, range };
+            return { code, language, terminalName, range };
         }
     }
     
