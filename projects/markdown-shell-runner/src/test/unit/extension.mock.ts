@@ -8,8 +8,8 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
     const text = document.getText();
     const offset = document.offsetAt(position);
     
-    // Regular expression to match markdown code blocks with optional terminal name parameter
-    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
+    // Regular expression to match markdown code blocks with optional terminal name parameter (space-separated)
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s+([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {

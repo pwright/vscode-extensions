@@ -313,8 +313,8 @@ export function extractCodeBlock(document: vscode.TextDocument, position: vscode
     const offset = document.offsetAt(position);
     
     // Regular expression to match complete markdown code blocks with content
-    // Updated to capture optional terminal name parameter
-    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to capture optional terminal name parameter (space-separated)
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s+([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -345,8 +345,8 @@ export function findAllShellCodeBlocks(document: vscode.TextDocument): { code: s
     const codeBlocks: { code: string, language: string, terminalName?: string, range: vscode.Range }[] = [];
     
     // Regular expression to match complete markdown code blocks with content
-    // Updated to capture optional terminal name parameter
-    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
+    // Updated to capture optional terminal name parameter (space-separated)
+    const codeBlockRegex = /```(shell|bash|sh|zsh|python|py)(?:\s+([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
     
     let match;
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -496,8 +496,8 @@ class ShellCodeLensProvider implements vscode.CodeLensProvider {
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
     constructor() {
-        // Updated regex to match code blocks with optional terminal name parameter
-        this.regex = /```(shell|bash|sh|zsh|python|py)(?:\s*,\s*([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
+        // Updated regex to match code blocks with optional terminal name parameter (space-separated)
+        this.regex = /```(shell|bash|sh|zsh|python|py)(?:\s+([a-zA-Z0-9_-]+))?\s*\n([\s\S]*?)\n\s*```/g;
         
         // Watch for document changes to refresh code lenses
         vscode.workspace.onDidChangeTextDocument(e => {

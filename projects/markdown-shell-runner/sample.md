@@ -6,7 +6,7 @@ This is a sample markdown file to test the Markdown Shell Runner extension.
 
 Place your cursor inside the code block below and look for the "▶ Run" button above the code block, or right-click to select "Run Shell Code Block":
 
-```bash,west
+```bash west
 echo "Hello, World!"
 echo "Current directory:"
 pwd
@@ -50,7 +50,7 @@ print(f"Numbers from 1 to 10: {numbers}")
 
 ## Another Example with Shell
 
-```shell, west
+```shell west
 # This is a shell script
 echo "Current date and time:"
 date
@@ -60,7 +60,7 @@ uname -a
 
 ## Example with sh
 
-```sh,east
+```sh east
 # This is an sh script
 echo "Environment variables:"
 env | grep PATH

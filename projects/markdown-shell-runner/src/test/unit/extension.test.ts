@@ -77,7 +77,7 @@ suite('Markdown Shell Runner', () => {
       const content = [
         '# Test Document',
         '',
-        '```bash,west',
+        '```bash west',
         'echo "Hello from west terminal!"',
         '```',
         ''
@@ -94,11 +94,11 @@ suite('Markdown Shell Runner', () => {
       assert.strictEqual(result!.terminalName, 'west');
     });
     
-    test('should extract shell code block with terminal name and spaces', () => {
+    test('should extract shell code block with terminal name', () => {
       const content = [
         '# Test Document',
         '',
-        '```shell, east',
+        '```shell east',
         'ls -la',
         '```',
         ''
@@ -119,7 +119,7 @@ suite('Markdown Shell Runner', () => {
       const content = [
         '# Test Document',
         '',
-        '```zsh,my-terminal',
+        '```zsh my-terminal',
         'echo "ZSH test"',
         '```',
         ''
